@@ -5,18 +5,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-
-const CATEGORY_ICONS = {
-  nightlife:  '🎵',
-  barbershop: '💈',
-  salon:      '💅',
-  restaurant: '🍽️',
-  tattoo:     '🎨',
-  medical:    '🏥',
-  clinic:     '🩺',
-  pharmacy:   '💊',
-  other:      '🏢',
-};
+import { CategoryIcon } from './Icons.jsx';
 
 function OccupancyBar({ pct }) {
   const color = pct >= 90 ? '#ff4d6d' : pct >= 70 ? '#f5a524' : '#2dd48f';
@@ -45,7 +34,6 @@ export default function VenueCard({ business }) {
     queue_length = 0, entry_fee_cents = 0, current_occupancy, capacity,
   } = business;
 
-  const icon = CATEGORY_ICONS[category] || CATEGORY_ICONS.other;
   const isFull = occupancy_pct >= 100;
 
   return (
@@ -70,7 +58,7 @@ export default function VenueCard({ business }) {
           alignItems: 'center', justifyContent: 'center',
           fontSize: 24, flexShrink: 0,
         }}>
-          {icon}
+          <CategoryIcon category={category} size={22} color="#a78bfa" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

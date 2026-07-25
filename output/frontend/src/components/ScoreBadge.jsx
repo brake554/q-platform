@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { BanIcon } from './Icons.jsx';
 
 const TIERS = [
   { min: 80,  color: '#2dd48f', label: 'Good Standing',   ring: '#2dd48f' },
@@ -42,7 +43,7 @@ export default function ScoreBadge({ score = 100, isRedFlagged = false, size = '
         }}
         title="Red Flag — Multiple Venue Bans"
       >
-        <span style={{ fontSize: s.fontSize * 1.1 }}>💀</span>
+        <BanIcon size={s.fontSize * 1.3} color="#ff4d6d" />
         {size === 'lg' && (
           <div style={{ fontSize: 11, color: '#ff4d6d', fontWeight: 700, marginTop: 2 }}>RED FLAG</div>
         )}

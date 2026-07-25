@@ -1,12 +1,12 @@
 {
-  "name": "Q — Skip the Line",
+  "name": "Q \u2014 Skip the Line",
   "short_name": "Q",
   "description": "Join the queue from anywhere. Get in when it's your turn.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0a0a0a",
-  "theme_color": "#7c3aed",
+  "background_color": "#08080c",
+  "theme_color": "#8b5cf6",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -15,10 +15,10 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ],
   "shortcuts": [

@@ -7,6 +7,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api } from '../api/client.js';
 import { useStore } from '../store/index.js';
+import { CheckCircleIcon, ClockIcon } from '../components/Icons.jsx';
 
 export default function Booking() {
   const { id: businessId } = useParams();
@@ -93,8 +94,9 @@ export default function Booking() {
 
           {/* Grace period info */}
           <div style={{ background: '#101016', border: '1px solid #1e1e2a', borderRadius: 12, padding: 16, marginBottom: 20 }}>
-            <div style={{ fontSize: 13, color: '#9a9aad' }}>
-              ⏱ Grace period: <b style={{ color: '#f4f4f8' }}>{business.grace_period_minutes} minutes</b>
+            <div style={{ fontSize: 13, color: '#9a9aad', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <ClockIcon size={16} color="#a78bfa" />
+              <span>Grace period: <b style={{ color: '#f4f4f8' }}>{business.grace_period_minutes} minutes</b></span>
             </div>
             <div style={{ fontSize: 12, color: '#50505f', marginTop: 4 }}>
               Arrive within {business.grace_period_minutes} min of your booked time. Miss it = back of queue.
@@ -125,7 +127,9 @@ export default function Booking() {
       {step === 'confirmed' && booking && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
-            <div style={{ fontSize: 64, marginBottom: 20 }}>✅</div>
+            <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'center' }}>
+              <CheckCircleIcon size={64} color="#2dd48f" />
+            </div>
             <h2 style={{ fontSize: 24, fontWeight: 800, color: '#f4f4f8', marginBottom: 8 }}>You're booked!</h2>
             <p style={{ color: '#6b6b80', marginBottom: 24, fontSize: 15 }}>
               Arrive by your grace deadline and walk straight in.

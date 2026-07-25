@@ -5,13 +5,14 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/index.js';
+import { CheckCircleIcon, AlertTriangleIcon, BanIcon, InfoIcon, ClockIcon } from './Icons.jsx';
 
 const TYPE_STYLES = {
-  success: { bg: 'rgba(45,212,143,0.12)', border: '#2dd48f', icon: '✅' },
-  warning: { bg: '#1f1500', border: '#f5a524', icon: '⚠️' },
-  error:   { bg: '#1f0000', border: '#ff4d6d', icon: '🚫' },
-  info:    { bg: '#0f0f2a', border: '#8b5cf6', icon: 'ℹ️' },
-  timer:   { bg: '#1a0a2e', border: '#a78bfa', icon: '⏱️' },
+  success: { bg: 'rgba(45,212,143,0.12)', border: '#2dd48f', Icon: CheckCircleIcon },
+  warning: { bg: '#1f1500', border: '#f5a524', Icon: AlertTriangleIcon },
+  error:   { bg: '#1f0000', border: '#ff4d6d', Icon: BanIcon },
+  info:    { bg: '#0f0f2a', border: '#8b5cf6', Icon: InfoIcon },
+  timer:   { bg: '#1a0a2e', border: '#a78bfa', Icon: ClockIcon },
 };
 
 function Toast({ notif, onDismiss }) {
@@ -41,7 +42,7 @@ function Toast({ notif, onDismiss }) {
         boxShadow: `0 4px 20px rgba(0,0,0,0.5)`,
       }}
     >
-      <span style={{ fontSize: 18, flexShrink: 0 }}>{style.icon}</span>
+      <style.Icon size={18} color={style.border} style={{ marginTop: 1 }} />
       <div style={{ fontSize: 14, color: '#f4f4f8', lineHeight: 1.4 }}>{notif.message}</div>
     </motion.div>
   );

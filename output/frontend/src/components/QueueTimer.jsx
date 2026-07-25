@@ -9,6 +9,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { useStore } from '../store/index.js';
 import { useQueue } from '../hooks/useQueue.js';
+import { CheckCircleIcon } from './Icons.jsx';
 
 export default function QueueTimer({ businessId, socket }) {
   const { timerState } = useStore((s) => ({ timerState: s.timerState }));
@@ -157,7 +158,7 @@ export default function QueueTimer({ businessId, socket }) {
             animate={{ scale: 1, opacity: 1 }}
             style={{ fontSize: 48, textAlign: 'center' }}
           >
-            ✅<br />
+            <CheckCircleIcon size={48} color="#2dd48f" /><br />
             <span style={{ fontSize: 20, color: '#2dd48f' }}>You&apos;re in!</span>
           </motion.div>
         )}

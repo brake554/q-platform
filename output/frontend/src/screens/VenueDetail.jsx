@@ -9,8 +9,7 @@ import { api } from '../api/client.js';
 import { useStore } from '../store/index.js';
 import { useQueue } from '../hooks/useQueue.js';
 import ScoreBadge from '../components/ScoreBadge.jsx';
-
-const CATEGORY_ICONS = { nightlife:'🎵', barbershop:'💈', salon:'💅', restaurant:'🍽️', tattoo:'🎨', medical:'🏥', clinic:'🩺', pharmacy:'💊', other:'🏢' };
+import { CategoryIcon, ClockIcon } from '../components/Icons.jsx';
 
 export default function VenueDetail({ socket }) {
   const { id } = useParams();
@@ -54,7 +53,14 @@ export default function VenueDetail({ socket }) {
 
       {/* Hero */}
       <div style={{ padding: '0 20px 24px' }}>
-        <div style={{ fontSize: 48, marginBottom: 12 }}>{CATEGORY_ICONS[business.category]}</div>
+        <div style={{
+          width: 72, height: 72, borderRadius: 20, marginBottom: 12,
+          background: 'linear-gradient(135deg, rgba(139,92,246,0.18), rgba(217,70,239,0.10))',
+          border: '1px solid rgba(139,92,246,0.25)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <CategoryIcon category={business.category} size={32} color="#a78bfa" />
+        </div>
         <h1 style={{ fontSize: 30, fontWeight: 800, color: '#f4f4f8', marginBottom: 4 }}>{business.name}</h1>
         <div style={{ fontSize: 14, color: '#6b6b80', marginBottom: 16 }}>{business.address}</div>
 
@@ -98,10 +104,11 @@ export default function VenueDetail({ socket }) {
 
         {/* Grace period info */}
         <div style={{ background: '#101016', border: '1px solid #1e1e2a', borderRadius: 12, padding: 16, marginBottom: 24 }}>
-          <div style={{ fontSize: 13, color: '#9a9aad' }}>
-            ⏱ Admission timer: <b style={{ color: '#f4f4f8' }}>{business.admission_timer_seconds}s</b>
+          <div style={{ fontSize: 13, color: '#9a9aad', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <ClockIcon size={16} color="#a78bfa" />
+            <span>Admission timer: <b style={{ color: '#f4f4f8' }}>{business.admission_timer_seconds}s</b>
             {'  '}|{'  '}
-            Grace period: <b style={{ color: '#f4f4f8' }}>{business.grace_period_minutes} min</b>
+            Grace period: <b style={{ color: '#f4f4f8' }}>{business.grace_period_minutes} min</b></span>
           </div>
         </div>
       </div>

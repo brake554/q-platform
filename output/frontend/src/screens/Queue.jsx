@@ -9,6 +9,7 @@ import { api } from '../api/client.js';
 import { useStore } from '../store/index.js';
 import { useQueue } from '../hooks/useQueue.js';
 import QueueTimer from '../components/QueueTimer.jsx';
+import { ClockIcon, BellIcon, CalendarIcon } from '../components/Icons.jsx';
 
 export default function Queue({ socket }) {
   const { id: businessId } = useParams();
@@ -81,9 +82,9 @@ export default function Queue({ socket }) {
 
       {/* Info cards */}
       <div style={{ width: '100%', maxWidth: 340 }}>
-        <InfoCard icon="⏱" label="Admission timer" value={`${business?.admission_timer_seconds || 90}s`} />
-        <InfoCard icon="📱" label="We'll notify you" value="Stay anywhere nearby" />
-        <InfoCard icon="📅" label="Pre-book instead" value={
+        <InfoCard icon={<ClockIcon size={20} color="#a78bfa" />} label="Admission timer" value={`${business?.admission_timer_seconds || 90}s`} />
+        <InfoCard icon={<BellIcon size={20} color="#a78bfa" />} label="We'll notify you" value="Stay anywhere nearby" />
+        <InfoCard icon={<CalendarIcon size={20} color="#a78bfa" />} label="Pre-book instead" value={
           <span onClick={() => navigate(`/booking/${businessId}`)} style={{ color: '#8b5cf6', cursor: 'pointer' }}>
             Reserve a time →
           </span>
@@ -112,7 +113,7 @@ export default function Queue({ socket }) {
 function InfoCard({ icon, label, value }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px', background: '#101016', border: '1px solid #1a1a26', borderRadius: 12, marginBottom: 8 }}>
-      <div style={{ fontSize: 22, flexShrink: 0 }}>{icon}</div>
+      <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{icon}</div>
       <div>
         <div style={{ fontSize: 12, color: '#50505f', marginBottom: 2 }}>{label}</div>
         <div style={{ fontSize: 14, color: '#ccc' }}>{value}</div>

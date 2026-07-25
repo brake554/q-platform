@@ -9,6 +9,8 @@ import { motion } from 'framer-motion';
 import { useStore } from '../store/index.js';
 import { useGeo } from '../hooks/useGeo.js';
 import VenueCard from '../components/VenueCard.jsx';
+import { MapIcon } from '../components/Icons.jsx';
+import QLogo from '../components/QLogo.jsx';
 
 const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const HAS_MAPS = Boolean(GOOGLE_MAPS_KEY);
@@ -56,7 +58,7 @@ export default function Home() {
         justifyContent: 'space-between', alignItems: 'center',
         background: '#08080c', zIndex: 10,
       }}>
-        <div style={{ fontSize: 32, fontWeight: 900, color: '#8b5cf6' }}>Q</div>
+        <QLogo size={32} />
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={() => setView('map')}
@@ -84,7 +86,7 @@ export default function Home() {
           alignItems: 'center', justifyContent: 'center',
           color: '#50505f', gap: 8, padding: 20, textAlign: 'center',
         }}>
-          <div style={{ fontSize: 40 }}>🗺️</div>
+          <MapIcon size={40} color="#a78bfa" />
           <div style={{ fontSize: 15, color: '#9a9aad' }}>Map unavailable</div>
           <div style={{ fontSize: 13, maxWidth: 280 }}>
             Add VITE_GOOGLE_MAPS_API_KEY to frontend/.env to enable the live map. Showing the list instead.

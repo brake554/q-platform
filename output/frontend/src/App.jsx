@@ -24,11 +24,12 @@ import Profile   from './screens/Profile.jsx';
 
 // Components
 import Notifications from './components/Notifications.jsx';
+import { MapIcon, UserIcon } from './components/Icons.jsx';
 
 // Bottom nav tabs
 const NAV_TABS = [
-  { path: '/',        icon: '🗺️', label: 'Explore' },
-  { path: '/profile', icon: '👤', label: 'Profile' },
+  { path: '/',        Icon: MapIcon,  label: 'Explore' },
+  { path: '/profile', Icon: UserIcon, label: 'Profile' },
 ];
 
 function BottomNav() {
@@ -52,7 +53,7 @@ function BottomNav() {
             textDecoration: 'none', color: active ? '#8b5cf6' : '#50505f',
             fontSize: 12, gap: 4,
           }}>
-            <span style={{ fontSize: 22 }}>{tab.icon}</span>
+            <tab.Icon size={22} />
             <span style={{ fontWeight: active ? 700 : 400 }}>{tab.label}</span>
           </a>
         );

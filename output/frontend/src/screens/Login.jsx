@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
+import QLogo from '../components/QLogo.jsx';
 
 export default function Login() {
   const { login } = useAuth();
@@ -37,7 +38,7 @@ export default function Login() {
       >
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <div style={{ fontSize: 72, fontWeight: 900, color: '#8b5cf6', lineHeight: 1 }}>Q</div>
+          <QLogo size={72} />
           <div style={{ fontSize: 14, color: '#50505f', marginTop: 4 }}>Skip the line</div>
         </div>
 
