@@ -1,0 +1,50 @@
+<!-- @dsCard group="Actions" name="Chips &amp; Badges" subtitle="Glass pills, gradient active state" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Q — Chips &amp; Badges</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0;padding:28px;background:#08080c;font-family:'Space Grotesk',system-ui,sans-serif;color:#f4f4f8}
+h2{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:#50505f;margin:28px 0 14px;font-weight:600}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{font-family:inherit}
+.chip{flex-shrink:0;padding:8px 18px;border-radius:999px;font-size:13px;font-weight:500;background:rgba(255,255,255,0.04);border:1px solid #2a2a3a;color:#9a9aad;cursor:pointer;transition:border-color .15s,color .15s}
+.chip:hover{border-color:#8b5cf6;color:#f4f4f8}
+.chip.active{background:linear-gradient(135deg,#8b5cf6,#d946ef);border-color:transparent;color:#fff;font-weight:600;box-shadow:0 4px 16px rgba(139,92,246,.4)}
+.tag{font-size:11px;font-weight:700;letter-spacing:0.5px;border-radius:999px;padding:4px 10px}
+.tag.free{color:#2dd48f;background:rgba(45,212,143,0.12);border:1px solid rgba(45,212,143,0.25)}
+.tag.full{color:#ff4d6d;background:rgba(255,77,109,0.12);border:1px solid rgba(255,77,109,0.25)}
+.price{font-size:13px;color:#a78bfa;font-weight:700}
+.party{width:52px;height:52px;border-radius:16px;border:1px solid #2a2a3a;background:rgba(255,255,255,0.04);color:#9a9aad;font-size:16px;font-weight:600;cursor:pointer;transition:border-color .15s}
+.party:hover{border-color:#8b5cf6}
+.party.active{background:linear-gradient(135deg,#8b5cf6,#d946ef);border-color:transparent;color:#fff;box-shadow:0 4px 16px rgba(139,92,246,.4)}
+</style>
+</head>
+<body>
+<h2>Category filter chips</h2>
+<div class="row">
+<button class="chip active">All</button>
+<button class="chip">Nightlife</button>
+<button class="chip">Barbershop</button>
+<button class="chip">Salon</button>
+<button class="chip">Tattoo</button>
+</div>
+<h2>Status tags</h2>
+<div class="row">
+<span class="tag free">FREE</span>
+<span class="tag full">FULL</span>
+<span class="price">$20</span>
+</div>
+<h2>Party size selector</h2>
+<div class="row">
+<button class="party active">1</button>
+<button class="party">2</button>
+<button class="party">3</button>
+<button class="party">4</button>
+<button class="party">5</button>
+<button class="party">6</button>
+</div>
+</body>
+</html>

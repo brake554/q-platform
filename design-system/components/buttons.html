@@ -1,0 +1,45 @@
+<!-- @dsCard group="Actions" name="Buttons" subtitle="Gradient pills with glow" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Q — Buttons</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0;padding:28px;background:#08080c;font-family:'Space Grotesk',system-ui,sans-serif;color:#f4f4f8}
+h2{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:#50505f;margin:28px 0 14px;font-weight:600}
+.col{max-width:380px;display:flex;flex-direction:column;gap:12px}
+button{font-family:inherit}
+.btn-primary{width:100%;padding:17px;font-size:17px;font-weight:700;background:linear-gradient(135deg,#8b5cf6,#d946ef);border:none;border-radius:999px;color:#fff;cursor:pointer;letter-spacing:0.3px;box-shadow:0 8px 32px rgba(139,92,246,.35);transition:transform .15s,box-shadow .15s}
+.btn-primary:hover{box-shadow:0 8px 40px rgba(139,92,246,.55)}
+.btn-primary:active{transform:scale(0.97)}
+.btn-primary[disabled]{background:#16161f;color:#50505f;box-shadow:none;cursor:default}
+.btn-secondary{width:100%;padding:16px;font-size:16px;font-weight:600;background:rgba(255,255,255,0.04);border:1px solid #2a2a3a;border-radius:999px;color:#9a9aad;cursor:pointer;transition:border-color .15s,color .15s}
+.btn-secondary:hover{border-color:#8b5cf6;color:#f4f4f8}
+.btn-danger{width:100%;padding:16px;font-size:16px;font-weight:600;background:transparent;border:1px solid rgba(255,77,109,0.35);border-radius:999px;color:#ff4d6d;cursor:pointer;transition:background .15s}
+.btn-danger:hover{background:rgba(255,77,109,0.08)}
+.btn-back{background:transparent;border:none;color:#a78bfa;font-size:15px;font-weight:500;cursor:pointer;padding:4px 0;text-align:left}
+.tabs{display:inline-flex;gap:4px;padding:4px;background:#101016;border:1px solid #1e1e2a;border-radius:999px}
+.tab{padding:8px 20px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;background:transparent;border:none;color:#6b6b80;transition:color .15s}
+.tab.active{background:linear-gradient(135deg,#8b5cf6,#d946ef);color:#fff;box-shadow:0 4px 16px rgba(139,92,246,.4)}
+</style>
+</head>
+<body>
+<h2>Primary</h2>
+<div class="col">
+<button class="btn-primary">Join Q</button>
+<button class="btn-primary" disabled>At Capacity</button>
+</div>
+<h2>Secondary</h2>
+<div class="col"><button class="btn-secondary">Pre-book instead</button></div>
+<h2>Destructive</h2>
+<div class="col"><button class="btn-danger">Leave Queue</button></div>
+<h2>Back link</h2>
+<div class="col"><button class="btn-back">← Back</button></div>
+<h2>Segmented tabs</h2>
+<div class="tabs">
+<button class="tab active">Map</button>
+<button class="tab">List</button>
+</div>
+</body>
+</html>

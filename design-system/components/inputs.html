@@ -1,0 +1,36 @@
+<!-- @dsCard group="Forms" name="Inputs" subtitle="Glass fields with violet focus ring" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Q — Inputs</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0;padding:28px;background:#08080c;font-family:'Space Grotesk',system-ui,sans-serif;color:#f4f4f8}
+h2{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:#50505f;margin:28px 0 14px;font-weight:600}
+.col{max-width:380px;display:flex;flex-direction:column;gap:16px}
+.input{width:100%;padding:16px 18px;font-size:16px;background:#101016;border:1px solid #2a2a3a;border-radius:16px;color:#f4f4f8;outline:none;box-sizing:border-box;font-family:inherit;transition:border-color .15s,box-shadow .15s;color-scheme:dark}
+.input::placeholder{color:#50505f}
+.input:focus{border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,0.25)}
+label{font-size:13px;color:#9a9aad;display:block;margin-bottom:8px;font-weight:500}
+.error{color:#ff4d6d;font-size:14px}
+</style>
+</head>
+<body>
+<h2>Text fields</h2>
+<div class="col">
+<input class="input" type="email" placeholder="Email">
+<input class="input" type="password" placeholder="Password" value="secret123">
+<div>
+<label>Date</label>
+<input class="input" type="date" value="2026-07-26">
+</div>
+<div>
+<label>Arrival Time</label>
+<input class="input" type="time" value="22:30">
+</div>
+<textarea class="input" rows="3" placeholder="Birthday party, accessibility needs, etc."></textarea>
+<div class="error">Invalid credentials</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!-- @dsCard group="Score" name="Occupancy" subtitle="Glowing bars and map pins" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Q — Occupancy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0;padding:28px;background:#08080c;font-family:'Space Grotesk',system-ui,sans-serif;color:#f4f4f8}
+h2{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:#50505f;margin:28px 0 14px;font-weight:600}
+.col{max-width:400px;display:flex;flex-direction:column;gap:22px}
+.head{display:flex;justify-content:space-between;font-size:11px;color:#9a9aad;margin-bottom:6px}
+.head b{font-weight:600}
+.track{height:5px;border-radius:3px;background:#1e1e2a;overflow:hidden}
+.fill{height:100%;border-radius:3px}
+.pins{display:flex;gap:36px;align-items:center;padding:16px 0}
+.pin{border-radius:50% 50% 50% 0;transform:rotate(-45deg);width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+.pin span{transform:rotate(45deg);font-size:10px;font-weight:700;color:#fff}
+.dot{width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#d946ef);border:3px solid #fff;box-shadow:0 0 16px rgba(139,92,246,0.8)}
+</style>
+</head>
+<body>
+<h2>Occupancy bar — green &lt;70% · amber 70–89% · red 90%+</h2>
+<div class="col">
+<div><div class="head"><span>Occupancy</span><b style="color:#2dd48f">33%</b></div>
+<div class="track"><div class="fill" style="width:33%;background:linear-gradient(90deg,#2dd48f88,#2dd48f);box-shadow:0 0 8px rgba(45,212,143,.5)"></div></div></div>
+<div><div class="head"><span>Occupancy</span><b style="color:#f5a524">80%</b></div>
+<div class="track"><div class="fill" style="width:80%;background:linear-gradient(90deg,#f5a52488,#f5a524);box-shadow:0 0 8px rgba(245,165,36,.5)"></div></div></div>
+<div><div class="head"><span>Occupancy</span><b style="color:#ff4d6d">100%</b></div>
+<div class="track"><div class="fill" style="width:100%;background:linear-gradient(90deg,#ff4d6d88,#ff4d6d);box-shadow:0 0 8px rgba(255,77,109,.5)"></div></div></div>
+</div>
+<h2>Map pins</h2>
+<div class="pins">
+<div class="pin" style="background:#2dd48f;box-shadow:0 0 16px rgba(45,212,143,.5)"><span>30%</span></div>
+<div class="pin" style="background:#f5a524;box-shadow:0 0 16px rgba(245,165,36,.5)"><span>80%</span></div>
+<div class="pin" style="background:#ff4d6d;box-shadow:0 0 16px rgba(255,77,109,.5)"><span>95%</span></div>
+<div class="dot" title="User position"></div>
+</div>
+</body>
+</html>

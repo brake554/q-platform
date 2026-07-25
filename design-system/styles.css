@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+:root{
+--q-bg:#08080c;--q-surface:#101016;--q-raised:#16161f;--q-well:#1a1a26;
+--q-border:#1e1e2a;--q-border-strong:#2a2a3a;
+--q-text:#f4f4f8;--q-text-2:#9a9aad;--q-text-3:#6b6b80;--q-text-4:#50505f;
+--q-primary:#8b5cf6;--q-primary-light:#a78bfa;--q-fuchsia:#d946ef;
+--q-gradient:linear-gradient(135deg,#8b5cf6,#d946ef); /* @kind other */
+--q-success:#2dd48f;--q-warning:#f5a524;--q-danger:#ff4d6d;
+--q-glow:0 8px 32px rgba(139,92,246,.35);
+--q-font:'Space Grotesk',system-ui,sans-serif;
+--q-radius:20px;--q-radius-sm:14px;--q-radius-pill:999px;
+}
+body{background:var(--q-bg);color:var(--q-text);font-family:var(--q-font)}
+a{color:var(--q-primary-light)}a:hover{color:var(--q-fuchsia)}

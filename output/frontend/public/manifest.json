@@ -1,0 +1,31 @@
+{
+  "name": "Q — Skip the Line",
+  "short_name": "Q",
+  "description": "Join the queue from anywhere. Get in when it's your turn.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Find a Business",
+      "url": "/",
+      "description": "Browse businesses near you"
+    }
+  ]
+}
