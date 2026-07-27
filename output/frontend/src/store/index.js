@@ -36,9 +36,26 @@ export const useStore = create((set, get) => ({
   // ── Geo ───────────────────────────────────────────────────────────────────
   userLocation: null,          // { lat, lng }
   nearbyBusinesses: [],
+  insideVenueIds: [],          // venues whose geofence currently contains us
+  simulatedLocation: null,     // demo override for userLocation
+  simulateMode: false,         // tap-the-map-to-move, for testing geofences
 
   setUserLocation:     (loc)  => set({ userLocation: loc }),
   setNearbyBusinesses: (list) => set({ nearbyBusinesses: list }),
+  setInsideVenueIds:   (ids)  => set({ insideVenueIds: ids }),
+  setSimulatedLocation: (loc) => set({ simulatedLocation: loc, userLocation: loc }),
+  toggleSimulateMode:  ()     => set((s) => ({ simulateMode: !s.simulateMode })),
+
+  /** Merge live occupancy/queue counts from a geofence check-in. */
+  applyVenueState: (updates) => set((state) => {
+    if (!updates?.length) return {};
+    const byId = new Map(updates.map((u) => [u.id, u]));
+    return {
+      nearbyBusinesses: state.nearbyBusinesses.map((b) =>
+        byId.has(b.id) ? { ...b, ...byId.get(b.id) } : b
+      ),
+    };
+  }),
 
   // ── Notifications ─────────────────────────────────────────────────────────
   notifications: [],           // [{ id, type, message, data, timestamp }]

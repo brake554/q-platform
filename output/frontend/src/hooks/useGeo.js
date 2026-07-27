@@ -9,10 +9,12 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { api } from '../api/client.js';
 import { useStore } from '../store/index.js';
+import { CITY_CENTER } from '../data/stjohns.js';
 
 const CHECK_IN_INTERVAL_MS = 30_000;  // Report position every 30s
 const NEARBY_RADIUS_KM = 5;
 const MIN_POSITION_CHANGE_M = 50;    // Only re-fetch if moved > 50m
+const GEOFENCE_MOVE_M = 8;           // Re-evaluate fences after a small move
 
 function haversineDistance(lat1, lng1, lat2, lng2) {
   const R = 6371000; // meters
@@ -25,7 +27,7 @@ function haversineDistance(lat1, lng1, lat2, lng2) {
 }
 
 export function useGeo(enabled = true) {
-  const { userLocation, setUserLocation, setNearbyBusinesses, user } = useStore();
+  const { userLocation, setUserLocation, setNearbyBusinesses, user, simulatedLocation } = useStore();
   const lastReportedPos = useRef(null);
   const checkInTimer = useRef(null);
   const watchId = useRef(null);
@@ -44,7 +46,35 @@ export function useGeo(enabled = true) {
   const reportPosition = useCallback(async (lat, lng) => {
     if (!user) return;
     try {
-      await api.post('/geo/checkin', { lat, lng });
+      const res = await api.post('/geo/checkin', { lat, lng });
+      const st = useStore.getState();
+
+      if (res?.businesses?.length) st.applyVenueState(res.businesses);
+      if (res?.inside) st.setInsideVenueIds(res.inside);
+
+      // Queue moved up while we were away
+      if (res?.queueUpdate && st.currentQueue?.businessId === res.queueUpdate.businessId) {
+        st.setCurrentQueue({ ...st.currentQueue, position: res.queueUpdate.position });
+      }
+
+      for (const ev of res?.events || []) {
+        const type =
+          ev.type === 'admitted' || ev.type === 'your_turn' ? 'success'
+          : ev.type === 'slot_filled' ? 'info'
+          : ev.type === 'arrived_early' ? 'warning'
+          : 'info';
+        st.addNotification({ type, message: ev.message, data: ev });
+
+        // Being admitted clears the queue card we were holding
+        if (ev.type === 'admitted' && st.currentQueue?.businessId === ev.businessId) {
+          st.clearQueue();
+          st.clearTimer();
+        }
+        // It's our turn — run the admission countdown
+        if (ev.type === 'your_turn') {
+          st.setTimerState({ businessId: ev.businessId, startedAt: Date.now() });
+        }
+      }
     } catch {
       // Non-fatal — geo-fence updates are best-effort
     }
@@ -56,21 +86,27 @@ export function useGeo(enabled = true) {
 
     setUserLocation({ lat, lng });
 
+    const moved = !prev || haversineDistance(prev.lat, prev.lng, lat, lng) > MIN_POSITION_CHANGE_M;
+
     // Fetch nearby businesses if moved significantly or first time
-    if (!prev || haversineDistance(prev.lat, prev.lng, lat, lng) > MIN_POSITION_CHANGE_M) {
-      fetchNearby(lat, lng);
+    if (moved) fetchNearby(lat, lng);
+
+    // Crossing a fence should register immediately, not on the next 30s tick
+    if (!prev || haversineDistance(prev.lat, prev.lng, lat, lng) > GEOFENCE_MOVE_M) {
+      reportPosition(lat, lng);
     }
 
     lastReportedPos.current = { lat, lng };
-  }, [fetchNearby, setUserLocation]);
+  }, [fetchNearby, setUserLocation, reportPosition]);
 
   useEffect(() => {
     if (!enabled) return;
 
-    // Immediately seed with default location so businesses show without waiting for GPS
-    const DEFAULT_LAT = 43.6532;
-    const DEFAULT_LNG = -79.3832;
-    fetchNearby(DEFAULT_LAT, DEFAULT_LNG);
+    // Immediately seed with the launch city so businesses show without waiting for GPS
+    fetchNearby(CITY_CENTER.lat, CITY_CENTER.lng);
+
+    // In simulate mode the map drives our position instead of the GPS
+    if (simulatedLocation) return;
 
     if (!navigator.geolocation) return;
 
@@ -88,10 +124,16 @@ export function useGeo(enabled = true) {
     }, CHECK_IN_INTERVAL_MS);
 
     return () => {
-      navigator.geolocation.clearWatch(watchId.current);
+      if (watchId.current != null) navigator.geolocation.clearWatch(watchId.current);
       clearInterval(checkInTimer.current);
     };
-  }, [enabled, handlePosition, reportPosition]);
+  }, [enabled, handlePosition, reportPosition, simulatedLocation]);
+
+  // Simulated moves run through the exact same pipeline as real GPS fixes
+  useEffect(() => {
+    if (!simulatedLocation) return;
+    handlePosition({ coords: { latitude: simulatedLocation.lat, longitude: simulatedLocation.lng } });
+  }, [simulatedLocation, handlePosition]);
 
   return { userLocation };
 }

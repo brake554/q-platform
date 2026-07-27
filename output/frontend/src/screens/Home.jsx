@@ -4,45 +4,31 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { APIProvider, Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
 import { motion } from 'framer-motion';
 import { useStore } from '../store/index.js';
 import { useGeo } from '../hooks/useGeo.js';
 import VenueCard from '../components/VenueCard.jsx';
 import { MapIcon } from '../components/Icons.jsx';
 import QLogo from '../components/QLogo.jsx';
-
-const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-const HAS_MAPS = Boolean(GOOGLE_MAPS_KEY);
-
-function OccupancyPin({ pct }) {
-  const color = pct >= 90 ? '#ff4d6d' : pct >= 70 ? '#f5a524' : '#2dd48f';
-  return (
-    <div style={{
-      background: color, borderRadius: '50% 50% 50% 0',
-      transform: 'rotate(-45deg)', width: 32, height: 32,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-    }}>
-      <span style={{ transform: 'rotate(45deg)', fontSize: 10, fontWeight: 700, color: '#fff' }}>
-        {pct}%
-      </span>
-    </div>
-  );
-}
+import MapView from '../components/MapView.jsx';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { userLocation, nearbyBusinesses } = useStore((s) => ({
+  const {
+    userLocation, nearbyBusinesses, insideVenueIds, simulateMode,
+    toggleSimulateMode, setSimulatedLocation,
+  } = useStore((s) => ({
     userLocation: s.userLocation,
     nearbyBusinesses: s.nearbyBusinesses,
+    insideVenueIds: s.insideVenueIds,
+    simulateMode: s.simulateMode,
+    toggleSimulateMode: s.toggleSimulateMode,
+    setSimulatedLocation: s.setSimulatedLocation,
   }));
-  const [view, setView] = useState(HAS_MAPS ? 'map' : 'list'); // 'map' | 'list'
+  const [view, setView] = useState('map'); // 'map' | 'list'
   const [category, setCategory] = useState('');
 
   useGeo(true);
-
-  const defaultCenter = userLocation || { lat: 43.6532, lng: -79.3832 }; // Toronto default
 
   const filtered = category
     ? nearbyBusinesses.filter((b) => b.category === category)
@@ -80,68 +66,51 @@ export default function Home() {
       </div>
 
       {/* Map view */}
-      {view === 'map' && !HAS_MAPS && (
-        <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          color: '#50505f', gap: 8, padding: 20, textAlign: 'center',
-        }}>
-          <MapIcon size={40} color="#a78bfa" />
-          <div style={{ fontSize: 15, color: '#9a9aad' }}>Map unavailable</div>
-          <div style={{ fontSize: 13, maxWidth: 280 }}>
-            Add VITE_GOOGLE_MAPS_API_KEY to frontend/.env to enable the live map. Showing the list instead.
-          </div>
-          <button onClick={() => setView('list')} style={{ ...tabBtn(true), marginTop: 12 }}>
-            View list
-          </button>
-        </div>
-      )}
-      {view === 'map' && HAS_MAPS && (
-        <div style={{ flex: 1, position: 'relative' }}>
-          <APIProvider apiKey={GOOGLE_MAPS_KEY}>
-            <Map
-              defaultCenter={defaultCenter}
-              defaultZoom={14}
-              mapId="q-dark-map"
-              style={{ width: '100%', height: '100%' }}
-              colorScheme="DARK"
-            >
-              {/* User position */}
-              {userLocation && (
-                <AdvancedMarker position={userLocation}>
-                  <div style={{
-                    width: 16, height: 16, borderRadius: '50%',
-                    background: '#8b5cf6', border: '3px solid #fff',
-                    boxShadow: '0 0 12px rgba(139,92,246,0.6)',
-                  }} />
-                </AdvancedMarker>
-              )}
+      {view === 'map' && (
+        <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+          <MapView
+            businesses={filtered}
+            userLocation={userLocation}
+            insideIds={insideVenueIds}
+            simulateMode={simulateMode}
+            onSelect={(b) => !simulateMode && navigate(`/business/${b.id}`)}
+            onMapClick={(pos) => simulateMode && setSimulatedLocation(pos)}
+          />
 
-              {/* Business markers */}
-              {filtered.map((b) => (
-                <AdvancedMarker
-                  key={b.id}
-                  position={{ lat: parseFloat(b.lat || defaultCenter.lat), lng: parseFloat(b.lng || defaultCenter.lng) }}
-                  onClick={() => navigate(`/business/${b.id}`)}
-                >
-                  <OccupancyPin pct={b.occupancy_pct || 0} />
-                </AdvancedMarker>
-              ))}
-            </Map>
-          </APIProvider>
+          {/* Walk-the-map control — drops your position to test geofences */}
+          <motion.button
+            whileTap={{ scale: 0.94 }}
+            onClick={toggleSimulateMode}
+            style={{
+              position: 'absolute', top: 12, left: 12, zIndex: 600,
+              padding: '8px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600,
+              cursor: 'pointer', backdropFilter: 'blur(8px)',
+              background: simulateMode
+                ? 'linear-gradient(135deg, #8b5cf6, #d946ef)'
+                : 'rgba(16,16,22,0.86)',
+              border: `1px solid ${simulateMode ? 'transparent' : '#2a2a3a'}`,
+              color: simulateMode ? '#fff' : '#9a9aad',
+              boxShadow: simulateMode ? '0 4px 18px rgba(139,92,246,0.45)' : 'none',
+            }}
+          >
+            {simulateMode ? 'Tap the map to move' : 'Simulate location'}
+          </motion.button>
 
           {/* Bottom sheet peek */}
           <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0,
-            background: 'linear-gradient(transparent, #08080c)',
-            padding: '48px 20px 20px',
+            position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 500,
+            background: 'linear-gradient(transparent, #08080c 55%)',
+            padding: '48px 20px 76px',
+            pointerEvents: 'none',
           }}>
             <div style={{ fontSize: 13, color: '#50505f', marginBottom: 8 }}>
               {filtered.length} places near you
             </div>
-            {filtered.slice(0, 2).map((b) => (
-              <VenueCard key={b.id} business={b} />
-            ))}
+            <div style={{ pointerEvents: 'auto' }}>
+              {filtered.slice(0, 2).map((b, i) => (
+                <VenueCard key={b.id} business={b} index={i} />
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -154,7 +123,7 @@ export default function Home() {
               No businesses near you.<br />Try expanding the radius or check your location settings.
             </div>
           ) : (
-            filtered.map((b) => <VenueCard key={b.id} business={b} />)
+            filtered.map((b, i) => <VenueCard key={b.id} business={b} index={i} />)
           )}
         </div>
       )}

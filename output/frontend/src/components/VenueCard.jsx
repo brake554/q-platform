@@ -27,7 +27,7 @@ function OccupancyBar({ pct }) {
   );
 }
 
-export default function VenueCard({ business }) {
+export default function VenueCard({ business, index = 0 }) {
   const navigate = useNavigate();
   const {
     id, name, category, address, occupancy_pct = 0,
@@ -38,6 +38,13 @@ export default function VenueCard({ business }) {
 
   return (
     <motion.div
+      initial={{ opacity: 0, y: 14, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{
+        type: 'spring', stiffness: 380, damping: 32,
+        delay: Math.min(index, 8) * 0.045,
+      }}
+      whileHover={{ y: -2, borderColor: '#3a3a52' }}
       whileTap={{ scale: 0.97 }}
       onClick={() => navigate(`/business/${id}`)}
       style={{

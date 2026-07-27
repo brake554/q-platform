@@ -5,6 +5,9 @@
  * No backend required. State persists in sessionStorage.
  */
 
+import { BUSINESSES as SEED_BUSINESSES } from '../data/stjohns.js';
+import { venuesContaining } from '../lib/geofence.js';
+
 // ── Persistent demo state ──────────────────────────────────────────────────
 function load(key, def) {
   try { return JSON.parse(sessionStorage.getItem('q_mock_' + key)) ?? def; } catch { return def; }
@@ -27,68 +30,7 @@ const DEMO_USER = {
   created_at: new Date().toISOString(),
 };
 
-const BUSINESSES = [
-  {
-    id: 'biz-001', name: 'Marquee Club', category: 'nightlife',
-    address: '132 Queen St W', city: 'Toronto',
-    capacity: 300, current_occupancy: 241, occupancy_pct: 80,
-    q_slot_allocation: 30, entry_fee_cents: 2000, queue_length: 12,
-    admission_timer_seconds: 90, grace_period_minutes: 15,
-    price_per_grace_minute_cents: 100, premium_revenue_split: 20,
-    description: 'Toronto\'s premier nightclub. Live DJs every weekend.',
-    distance_meters: 180,
-  },
-  {
-    id: 'biz-002', name: 'Fresh Cuts Barbershop', category: 'barbershop',
-    address: '88 Spadina Ave', city: 'Toronto',
-    capacity: 8, current_occupancy: 7, occupancy_pct: 88,
-    q_slot_allocation: 4, entry_fee_cents: 0, queue_length: 5,
-    admission_timer_seconds: 120, grace_period_minutes: 15,
-    price_per_grace_minute_cents: 50, premium_revenue_split: 20,
-    description: 'Walk-in and appointment cuts. No waiting around.',
-    distance_meters: 420,
-  },
-  {
-    id: 'biz-003', name: 'Studio Glow Salon', category: 'salon',
-    address: '210 King St E', city: 'Toronto',
-    capacity: 12, current_occupancy: 4, occupancy_pct: 33,
-    q_slot_allocation: 6, entry_fee_cents: 0, queue_length: 2,
-    admission_timer_seconds: 90, grace_period_minutes: 20,
-    price_per_grace_minute_cents: 75, premium_revenue_split: 25,
-    description: 'Full service hair salon. Colour specialists on site.',
-    distance_meters: 650,
-  },
-  {
-    id: 'biz-004', name: 'Ink Society Tattoo', category: 'tattoo',
-    address: '44 Ossington Ave', city: 'Toronto',
-    capacity: 6, current_occupancy: 6, occupancy_pct: 100,
-    q_slot_allocation: 3, entry_fee_cents: 0, queue_length: 8,
-    admission_timer_seconds: 90, grace_period_minutes: 30,
-    price_per_grace_minute_cents: 100, premium_revenue_split: 30,
-    description: 'Custom tattoo studio. Walk-ins welcome when space allows.',
-    distance_meters: 890,
-  },
-  {
-    id: 'biz-005', name: 'Uptown Medical Clinic', category: 'clinic',
-    address: '555 University Ave', city: 'Toronto',
-    capacity: 20, current_occupancy: 11, occupancy_pct: 55,
-    q_slot_allocation: 10, entry_fee_cents: 0, queue_length: 6,
-    admission_timer_seconds: 180, grace_period_minutes: 20,
-    price_per_grace_minute_cents: 0, premium_revenue_split: 10,
-    description: 'Walk-in clinic. Q from anywhere — we\'ll buzz you when ready.',
-    distance_meters: 1100,
-  },
-  {
-    id: 'biz-006', name: 'The Terrace Rooftop Bar', category: 'nightlife',
-    address: '1 Richmond St W', city: 'Toronto',
-    capacity: 150, current_occupancy: 45, occupancy_pct: 30,
-    q_slot_allocation: 25, entry_fee_cents: 1000, queue_length: 0,
-    admission_timer_seconds: 90, grace_period_minutes: 15,
-    price_per_grace_minute_cents: 100, premium_revenue_split: 20,
-    description: 'Rooftop cocktail bar with city views.',
-    distance_meters: 1400,
-  },
-];
+const BUSINESSES = SEED_BUSINESSES.map((b) => ({ ...b }));
 
 // ── Queue state ────────────────────────────────────────────────────────────
 function getQueues() { return load('queues', {}); }
@@ -132,6 +74,136 @@ function saveUsers(u) { save('users', u); }
 // ── Bookings ───────────────────────────────────────────────────────────────
 function getBookings() { return load('bookings', []); }
 function saveBookings(b) { save('bookings', b); }
+
+
+// ── Live venue state (occupancy / queue length) ────────────────────────────
+// Mutations from the geofence engine persist for the session so the map keeps
+// telling a consistent story across reloads.
+function getOverrides() { return load('biz_state', {}); }
+function saveOverrides(o) { save('biz_state', o); }
+
+function recalcPct(b) {
+  b.occupancy_pct = b.capacity > 0
+    ? Math.max(0, Math.min(100, Math.round((b.current_occupancy / b.capacity) * 100)))
+    : 0;
+}
+
+function persistBiz(b) {
+  const o = getOverrides();
+  o[b.id] = { current_occupancy: b.current_occupancy, queue_length: b.queue_length };
+  saveOverrides(o);
+}
+
+(function applyStoredState() {
+  const o = getOverrides();
+  BUSINESSES.forEach((b) => {
+    const ov = o[b.id];
+    if (ov) {
+      b.current_occupancy = ov.current_occupancy;
+      b.queue_length = ov.queue_length;
+      recalcPct(b);
+    }
+  });
+})();
+
+function hasRoom(b) { return b.current_occupancy < b.capacity; }
+
+function admitOne(b) {
+  b.current_occupancy = Math.min(b.capacity, b.current_occupancy + 1);
+  if (b.queue_length > 0) b.queue_length -= 1;
+  recalcPct(b);
+  persistBiz(b);
+}
+
+function releaseOne(b) {
+  b.current_occupancy = Math.max(0, b.current_occupancy - 1);
+  recalcPct(b);
+  persistBiz(b);
+}
+
+// ── Geofence engine ────────────────────────────────────────────────────────
+function getInside() { return load('geo_inside', []); }
+function saveInside(ids) { save('geo_inside', ids); }
+
+/**
+ * Diff the user's position against every venue fence and drive the queue:
+ *  - arriving while you're at the front of the Q admits you
+ *  - leaving frees your slot, which lets the next person in the Q in
+ *  - while you wait, people ahead of you get admitted as room opens up
+ */
+function processGeofence(lat, lng) {
+  const prevInside = getInside();
+  const nowInside = venuesContaining(lat, lng, BUSINESSES, prevInside);
+  const entered = nowInside.filter((id) => !prevInside.includes(id));
+  const exited = prevInside.filter((id) => !nowInside.includes(id));
+  saveInside(nowInside);
+
+  const events = [];
+  const queues = getQueues();
+
+  for (const id of entered) {
+    const b = BUSINESSES.find((x) => x.id === id);
+    if (!b) continue;
+    const entry = queues[id];
+    if (entry && entry.status !== 'admitted') {
+      if (entry.position <= 1 && hasRoom(b)) {
+        admitOne(b);
+        delete queues[id];
+        saveQueues(queues);
+        events.push({ type: 'admitted', businessId: id, businessName: b.name,
+          message: `You're in at ${b.name}. Welcome.` });
+      } else {
+        events.push({ type: 'arrived_early', businessId: id, businessName: b.name,
+          message: `You're at ${b.name} — you're #${entry.position} in the Q.` });
+      }
+    } else {
+      if (hasRoom(b)) admitOne(b);
+      events.push({ type: 'entered', businessId: id, businessName: b.name,
+        message: `Checked in at ${b.name}.` });
+    }
+  }
+
+  for (const id of exited) {
+    const b = BUSINESSES.find((x) => x.id === id);
+    if (!b) continue;
+    releaseOne(b);
+    events.push({ type: 'exited', businessId: id, businessName: b.name,
+      message: `Left ${b.name}.` });
+    // Your slot frees up — the next person waiting gets let in.
+    if (b.queue_length > 0) {
+      admitOne(b);
+      events.push({ type: 'slot_filled', businessId: id, businessName: b.name,
+        message: `A spot opened at ${b.name} — next in the Q was let in.` });
+    }
+  }
+
+  // Meanwhile, the Q you're waiting in keeps moving as room opens up.
+  let queueUpdate = null;
+  for (const [bizId, entry] of Object.entries(queues)) {
+    const b = BUSINESSES.find((x) => x.id === bizId);
+    if (!b || entry.status === 'admitted') continue;
+    if (entry.position > 1 && hasRoom(b)) {
+      admitOne(b);                 // the person ahead of you walks in
+      entry.position -= 1;
+      saveQueues(queues);
+      queueUpdate = { businessId: bizId, position: entry.position };
+      if (entry.position === 1) {
+        events.push({ type: 'your_turn', businessId: bizId, businessName: b.name,
+          message: `You're next at ${b.name}. Head over — ${b.admission_timer_seconds}s once you arrive.` });
+      }
+    }
+  }
+
+  return {
+    events,
+    inside: nowInside,
+    queueUpdate,
+    businesses: BUSINESSES.map((b) => ({
+      id: b.id, current_occupancy: b.current_occupancy,
+      occupancy_pct: b.occupancy_pct, queue_length: b.queue_length,
+    })),
+  };
+}
 
 // ── Route handler ──────────────────────────────────────────────────────────
 export async function mockFetch(path, method, body) {
@@ -208,7 +280,10 @@ export async function mockFetch(path, method, body) {
   }
 
   if (path === '/geo/checkin' && method === 'POST') {
-    return ok({ alerts: [], occupancyChanges: [] });
+    if (typeof body?.lat !== 'number' || typeof body?.lng !== 'number') {
+      return ok({ events: [], inside: [], queueUpdate: null, businesses: [] });
+    }
+    return ok(processGeofence(body.lat, body.lng));
   }
 
   if (path === '/businesses' && method === 'GET') {
