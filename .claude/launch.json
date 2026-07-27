@@ -5,8 +5,8 @@
       "name": "Q Frontend (PWA)",
       "runtimeExecutable": "/Users/spencerbrake/.nvm/versions/node/v23.3.0/bin/node",
       "runtimeArgs": [
-        "/Users/spencerbrake/Desktop/shit i be making/Q/output/frontend/node_modules/.bin/vite",
-        "/Users/spencerbrake/Desktop/shit i be making/Q/output/frontend",
+        "output/frontend/node_modules/.bin/vite",
+        "output/frontend",
         "--port", "5173",
         "--host"
       ],
@@ -16,8 +16,8 @@
       "name": "Q Admin Panel",
       "runtimeExecutable": "/Users/spencerbrake/.nvm/versions/node/v23.3.0/bin/node",
       "runtimeArgs": [
-        "/Users/spencerbrake/Desktop/shit i be making/Q/output/frontend/node_modules/.bin/vite",
-        "/Users/spencerbrake/Desktop/shit i be making/Q/output/admin",
+        "output/frontend/node_modules/.bin/vite",
+        "output/admin",
         "--port", "5174",
         "--host"
       ],
@@ -27,7 +27,7 @@
       "name": "Q Backend API",
       "runtimeExecutable": "/Users/spencerbrake/.nvm/versions/node/v23.3.0/bin/node",
       "runtimeArgs": [
-        "/Users/spencerbrake/Desktop/shit i be making/Q/output/backend/src/index.js"
+        "output/backend/src/index.js"
       ],
       "port": 3001
     }
