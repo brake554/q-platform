@@ -10,6 +10,7 @@ import { useStore } from '../store/index.js';
 import { useQueue } from '../hooks/useQueue.js';
 import QueueTimer from '../components/QueueTimer.jsx';
 import { ClockIcon, BellIcon, CalendarIcon } from '../components/Icons.jsx';
+import { applyLiveUpdate } from '../lib/applyLiveUpdate.js';
 
 export default function Queue({ socket }) {
   const { id: businessId } = useParams();
@@ -79,6 +80,23 @@ export default function Queue({ socket }) {
         />
         <div style={{ fontSize: 13, color: '#50505f' }}>Queue updating in real time</div>
       </div>
+
+      {/* Demo control — stands in for another patron's phone leaving the fence */}
+      <motion.button
+        whileTap={{ scale: 0.96 }}
+        onClick={async () => {
+          try {
+            applyLiveUpdate(await api.post('/sim/patron-leaves', { businessId }));
+          } catch { /* demo-only, safe to ignore */ }
+        }}
+        style={{
+          marginBottom: 24, padding: '10px 18px', borderRadius: 999,
+          background: 'rgba(255,255,255,0.04)', border: '1px dashed #2a2a3a',
+          color: '#9a9aad', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+        }}
+      >
+        Simulate: someone leaves
+      </motion.button>
 
       {/* Info cards */}
       <div style={{ width: '100%', maxWidth: 340 }}>

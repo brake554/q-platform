@@ -2,7 +2,7 @@
  * Home — Map view with live venue occupancy markers + nearby list
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useStore } from '../store/index.js';
@@ -27,12 +27,23 @@ export default function Home() {
   }));
   const [view, setView] = useState('map'); // 'map' | 'list'
   const [category, setCategory] = useState('');
+  const [segment, setSegment] = useState('nearby');
 
   useGeo(true);
 
-  const filtered = category
+  const byCategory = category
     ? nearbyBusinesses.filter((b) => b.category === category)
     : nearbyBusinesses;
+
+  const filtered = useMemo(
+    () => sortForSegment(byCategory, segment),
+    [byCategory, segment]
+  );
+
+  const featured = useMemo(
+    () => nearbyBusinesses.filter((b) => b.featured).slice(0, 2),
+    [nearbyBusinesses]
+  );
 
   const categories = ['nightlife', 'barbershop', 'salon', 'restaurant', 'tattoo', 'medical', 'clinic', 'pharmacy'];
 
@@ -55,6 +66,19 @@ export default function Home() {
             style={tabBtn(view === 'list')}
           >List</button>
         </div>
+      </div>
+
+      {/* How to rank what you're seeing */}
+      <div style={{ padding: '4px 20px 0', overflowX: 'auto', display: 'flex', gap: 8, flexShrink: 0 }}>
+        {SEGMENTS.map((sg) => (
+          <SegmentChip
+            key={sg.id}
+            label={sg.label}
+            hint={sg.hint}
+            active={segment === sg.id}
+            onClick={() => setSegment(sg.id)}
+          />
+        ))}
       </div>
 
       {/* Category filter chips */}
@@ -103,11 +127,22 @@ export default function Home() {
             padding: '48px 20px 76px',
             pointerEvents: 'none',
           }}>
-            <div style={{ fontSize: 13, color: '#50505f', marginBottom: 8 }}>
-              {filtered.length} places near you
+            <div style={{
+              display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+              marginBottom: 8,
+            }}>
+              <div style={{
+                fontSize: 11, color: '#a78bfa', letterSpacing: 1.6,
+                textTransform: 'uppercase', fontWeight: 700,
+              }}>
+                Featured tonight
+              </div>
+              <div style={{ fontSize: 12, color: '#50505f' }}>
+                {filtered.length} places nearby
+              </div>
             </div>
             <div style={{ pointerEvents: 'auto' }}>
-              {filtered.slice(0, 2).map((b, i) => (
+              {(featured.length ? featured : filtered.slice(0, 2)).map((b, i) => (
                 <VenueCard key={b.id} business={b} index={i} />
               ))}
             </div>
@@ -128,6 +163,56 @@ export default function Home() {
         </div>
       )}
     </div>
+  );
+}
+
+// Ways to rank the list. Each one reads off live data we actually have:
+// distance, how full a venue is, and how many people are waiting.
+const SEGMENTS = [
+  { id: 'nearby',   label: 'Nearby',     hint: 'Closest to you' },
+  { id: 'trending', label: 'Trending',   hint: 'Busiest right now' },
+  { id: 'shortest', label: 'Shortest Q', hint: 'Quickest way in' },
+  { id: 'quiet',    label: 'Quiet',      hint: 'Room to breathe' },
+];
+
+function sortForSegment(list, segment) {
+  const arr = [...list];
+  switch (segment) {
+    case 'trending':
+      // Busy room + people willing to wait for it
+      return arr.sort((a, b) =>
+        ((b.occupancy_pct || 0) + Math.min(b.queue_length || 0, 20) * 3) -
+        ((a.occupancy_pct || 0) + Math.min(a.queue_length || 0, 20) * 3)
+      );
+    case 'shortest':
+      return arr.sort((a, b) =>
+        (a.queue_length || 0) - (b.queue_length || 0) ||
+        (a.occupancy_pct || 0) - (b.occupancy_pct || 0)
+      );
+    case 'quiet':
+      return arr.sort((a, b) => (a.occupancy_pct || 0) - (b.occupancy_pct || 0));
+    case 'nearby':
+    default:
+      return arr.sort((a, b) => (a.distance_meters || 0) - (b.distance_meters || 0));
+  }
+}
+
+function SegmentChip({ label, hint, active, onClick }) {
+  return (
+    <motion.button
+      whileTap={{ scale: 0.95 }}
+      onClick={onClick}
+      title={hint}
+      style={{
+        flexShrink: 0, padding: '7px 16px', borderRadius: 999, fontSize: 13,
+        fontWeight: active ? 700 : 500, cursor: 'pointer',
+        background: active ? 'rgba(139,92,246,0.16)' : 'transparent',
+        border: `1px solid ${active ? 'rgba(139,92,246,0.5)' : '#1e1e2a'}`,
+        color: active ? '#c4b5fd' : '#6b6b80',
+      }}
+    >
+      {label}
+    </motion.button>
   );
 }
 

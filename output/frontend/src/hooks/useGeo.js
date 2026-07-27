@@ -10,6 +10,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { api } from '../api/client.js';
 import { useStore } from '../store/index.js';
 import { CITY_CENTER } from '../data/stjohns.js';
+import { applyLiveUpdate } from '../lib/applyLiveUpdate.js';
 
 const CHECK_IN_INTERVAL_MS = 30_000;  // Report position every 30s
 const NEARBY_RADIUS_KM = 5;
@@ -46,35 +47,7 @@ export function useGeo(enabled = true) {
   const reportPosition = useCallback(async (lat, lng) => {
     if (!user) return;
     try {
-      const res = await api.post('/geo/checkin', { lat, lng });
-      const st = useStore.getState();
-
-      if (res?.businesses?.length) st.applyVenueState(res.businesses);
-      if (res?.inside) st.setInsideVenueIds(res.inside);
-
-      // Queue moved up while we were away
-      if (res?.queueUpdate && st.currentQueue?.businessId === res.queueUpdate.businessId) {
-        st.setCurrentQueue({ ...st.currentQueue, position: res.queueUpdate.position });
-      }
-
-      for (const ev of res?.events || []) {
-        const type =
-          ev.type === 'admitted' || ev.type === 'your_turn' ? 'success'
-          : ev.type === 'slot_filled' ? 'info'
-          : ev.type === 'arrived_early' ? 'warning'
-          : 'info';
-        st.addNotification({ type, message: ev.message, data: ev });
-
-        // Being admitted clears the queue card we were holding
-        if (ev.type === 'admitted' && st.currentQueue?.businessId === ev.businessId) {
-          st.clearQueue();
-          st.clearTimer();
-        }
-        // It's our turn — run the admission countdown
-        if (ev.type === 'your_turn') {
-          st.setTimerState({ businessId: ev.businessId, startedAt: Date.now() });
-        }
-      }
+      applyLiveUpdate(await api.post('/geo/checkin', { lat, lng }));
     } catch {
       // Non-fatal — geo-fence updates are best-effort
     }

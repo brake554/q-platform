@@ -104,10 +104,15 @@ export default function MapView({
       if (onMapClickRef.current) onMapClickRef.current({ lat: e.latlng.lat, lng: e.latlng.lng });
     });
 
-    // Leaflet needs a nudge when its container animates in
+    // Leaflet caches its pixel size, so any layout change around it (filter
+    // rows appearing, the page transition settling) leaves markers drawn in
+    // the wrong place until it re-measures.
     const t = setTimeout(() => map.invalidateSize(), 120);
+    const ro = new ResizeObserver(() => map.invalidateSize());
+    ro.observe(containerRef.current);
 
     return () => {
+      ro.disconnect();
       clearTimeout(t);
       map.remove();
       mapRef.current = null;

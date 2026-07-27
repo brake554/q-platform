@@ -125,11 +125,19 @@ function releaseOne(b) {
 function getInside() { return load('geo_inside', []); }
 function saveInside(ids) { save('geo_inside', ids); }
 
+// Venues we're currently counted inside of — i.e. we were admitted through the
+// Q and haven't left yet. Only these decrement occupancy on the way out.
+function getAdmittedAt() { return load('geo_admitted', []); }
+function saveAdmittedAt(ids) { save('geo_admitted', ids); }
+
 /**
- * Diff the user's position against every venue fence and drive the queue:
- *  - arriving while you're at the front of the Q admits you
- *  - leaving frees your slot, which lets the next person in the Q in
- *  - while you wait, people ahead of you get admitted as room opens up
+ * The fence only answers two questions: did you arrive, and did you leave?
+ *
+ *  - Arriving is how you claim a Q spot you already joined by hand. It never
+ *    joins a Q for you, and walking past a venue you aren't queued for does
+ *    nothing at all.
+ *  - Leaving releases the spot you were occupying, which is what lets the next
+ *    person in that venue's Q be admitted.
  */
 function processGeofence(lat, lng) {
   const prevInside = getInside();
@@ -140,55 +148,65 @@ function processGeofence(lat, lng) {
 
   const events = [];
   const queues = getQueues();
+  let admittedAt = getAdmittedAt();
+  let queueUpdate = null;
 
+  // ── Arrivals ─────────────────────────────────────────────────────────────
   for (const id of entered) {
     const b = BUSINESSES.find((x) => x.id === id);
     if (!b) continue;
     const entry = queues[id];
-    if (entry && entry.status !== 'admitted') {
-      if (entry.position <= 1 && hasRoom(b)) {
-        admitOne(b);
-        delete queues[id];
-        saveQueues(queues);
-        events.push({ type: 'admitted', businessId: id, businessName: b.name,
-          message: `You're in at ${b.name}. Welcome.` });
-      } else {
-        events.push({ type: 'arrived_early', businessId: id, businessName: b.name,
-          message: `You're at ${b.name} — you're #${entry.position} in the Q.` });
-      }
+
+    // Not in this venue's Q? Then arriving means nothing — you join by hand.
+    if (!entry || entry.status === 'admitted') continue;
+
+    if (entry.position > 1) {
+      events.push({ type: 'arrived_early', businessId: id, businessName: b.name,
+        message: `You're at ${b.name}, but you're #${entry.position} in the Q. Hang tight.` });
+    } else if (!hasRoom(b)) {
+      events.push({ type: 'arrived_early', businessId: id, businessName: b.name,
+        message: `You're at ${b.name} and next in line — waiting on a spot to free up.` });
     } else {
-      if (hasRoom(b)) admitOne(b);
-      events.push({ type: 'entered', businessId: id, businessName: b.name,
-        message: `Checked in at ${b.name}.` });
+      // You're at the front and there's room: your arrival claims the spot.
+      admitOne(b);
+      delete queues[id];
+      saveQueues(queues);
+      admittedAt = [...new Set([...admittedAt, id])];
+      saveAdmittedAt(admittedAt);
+      events.push({ type: 'admitted', businessId: id, businessName: b.name,
+        message: `You're in at ${b.name}. Welcome.` });
     }
   }
 
+  // ── Departures ───────────────────────────────────────────────────────────
   for (const id of exited) {
     const b = BUSINESSES.find((x) => x.id === id);
     if (!b) continue;
+
+    // Only give a spot back if we were actually occupying one.
+    if (!admittedAt.includes(id)) continue;
+
     releaseOne(b);
+    admittedAt = admittedAt.filter((x) => x !== id);
+    saveAdmittedAt(admittedAt);
     events.push({ type: 'exited', businessId: id, businessName: b.name,
-      message: `Left ${b.name}.` });
-    // Your slot frees up — the next person waiting gets let in.
+      message: `Left ${b.name} — your spot is back in the pool.` });
+
+    // The spot you freed is what lets the next person in.
     if (b.queue_length > 0) {
       admitOne(b);
       events.push({ type: 'slot_filled', businessId: id, businessName: b.name,
         message: `A spot opened at ${b.name} — next in the Q was let in.` });
     }
-  }
 
-  // Meanwhile, the Q you're waiting in keeps moving as room opens up.
-  let queueUpdate = null;
-  for (const [bizId, entry] of Object.entries(queues)) {
-    const b = BUSINESSES.find((x) => x.id === bizId);
-    if (!b || entry.status === 'admitted') continue;
-    if (entry.position > 1 && hasRoom(b)) {
-      admitOne(b);                 // the person ahead of you walks in
-      entry.position -= 1;
+    // If we're waiting in this venue's Q ourselves, we just moved up.
+    const ourEntry = queues[id];
+    if (ourEntry && ourEntry.position > 1) {
+      ourEntry.position -= 1;
       saveQueues(queues);
-      queueUpdate = { businessId: bizId, position: entry.position };
-      if (entry.position === 1) {
-        events.push({ type: 'your_turn', businessId: bizId, businessName: b.name,
+      queueUpdate = { businessId: id, position: ourEntry.position };
+      if (ourEntry.position === 1) {
+        events.push({ type: 'your_turn', businessId: id, businessName: b.name,
           message: `You're next at ${b.name}. Head over — ${b.admission_timer_seconds}s once you arrive.` });
       }
     }
@@ -201,6 +219,59 @@ function processGeofence(lat, lng) {
     businesses: BUSINESSES.map((b) => ({
       id: b.id, current_occupancy: b.current_occupancy,
       occupancy_pct: b.occupancy_pct, queue_length: b.queue_length,
+    })),
+  };
+}
+
+
+/**
+ * Demo helper: another patron walks out of a venue.
+ *
+ * This is the event the real system would get from *their* phone crossing the
+ * fence outward. It frees a spot, which lets the next person in that venue's Q
+ * be admitted — and moves you up if you're waiting in it.
+ */
+function simulatePatronLeaves(bizId) {
+  const b = BUSINESSES.find((x) => x.id === bizId);
+  if (!b) return { events: [], queueUpdate: null, businesses: [] };
+
+  const events = [];
+  const queues = getQueues();
+  let queueUpdate = null;
+
+  if (b.current_occupancy <= 0) {
+    events.push({ type: 'info', businessId: bizId, businessName: b.name,
+      message: `${b.name} is already empty.` });
+  } else {
+    releaseOne(b);
+    events.push({ type: 'patron_left', businessId: bizId, businessName: b.name,
+      message: `Someone left ${b.name}.` });
+
+    if (b.queue_length > 0) {
+      admitOne(b);
+      events.push({ type: 'slot_filled', businessId: bizId, businessName: b.name,
+        message: `A spot opened at ${b.name} — next in the Q was let in.` });
+    }
+
+    const entry = queues[bizId];
+    if (entry && entry.status !== 'admitted' && entry.position > 1) {
+      entry.position -= 1;
+      saveQueues(queues);
+      queueUpdate = { businessId: bizId, position: entry.position };
+      if (entry.position === 1) {
+        events.push({ type: 'your_turn', businessId: bizId, businessName: b.name,
+          message: `You're next at ${b.name}. Head over — ${b.admission_timer_seconds}s once you arrive.` });
+      }
+    }
+  }
+
+  return {
+    events,
+    queueUpdate,
+    inside: getInside(),
+    businesses: BUSINESSES.map((x) => ({
+      id: x.id, current_occupancy: x.current_occupancy,
+      occupancy_pct: x.occupancy_pct, queue_length: x.queue_length,
     })),
   };
 }
@@ -277,6 +348,10 @@ export async function mockFetch(path, method, body) {
   // ── Geo / Businesses ────────────────────────────────────────────────────
   if (path.startsWith('/geo/businesses/nearby') && method === 'GET') {
     return ok({ businesses: BUSINESSES });
+  }
+
+  if (path === '/sim/patron-leaves' && method === 'POST') {
+    return ok(simulatePatronLeaves(body?.businessId));
   }
 
   if (path === '/geo/checkin' && method === 'POST') {

@@ -32,6 +32,7 @@ export default function VenueCard({ business, index = 0 }) {
   const {
     id, name, category, address, occupancy_pct = 0,
     queue_length = 0, entry_fee_cents = 0, current_occupancy, capacity,
+    featured = false,
   } = business;
 
   const isFull = occupancy_pct >= 100;
@@ -68,6 +69,14 @@ export default function VenueCard({ business, index = 0 }) {
           <CategoryIcon category={category} size={22} color="#a78bfa" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
+          {featured && (
+            <div style={{
+              fontSize: 9, letterSpacing: 1.4, textTransform: 'uppercase',
+              fontWeight: 700, color: '#a78bfa', marginBottom: 3,
+            }}>
+              Featured
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: '#f4f4f8', marginBottom: 2 }}>
               {name}

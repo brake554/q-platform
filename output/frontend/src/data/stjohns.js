@@ -8,6 +8,11 @@
  * Live-looking fields (capacity, current_occupancy, occupancy_pct, queue_length,
  * entry_fee_cents, grace/premium settings) are SIMULATED demo values, generated
  * deterministically per venue. They are not real operational data.
+ *
+ * `featured` marks the promoted slots on the map screen. These are demo
+ * placeholders — no real commercial arrangement exists with these businesses.
+ * In production this is paid placement and must stay visually identifiable as
+ * advertising.
  */
 
 export const CITY_CENTER = { lat: 47.5615, lng: -52.7126 };
@@ -111,6 +116,7 @@ export const BUSINESSES = [
     price_per_grace_minute_cents: 50, premium_revenue_split: 10,
     description: "Restaurant on Water Street.",
     osm_ref: "node/6475127585",
+    featured: true,
   },
   {
     id: "sj-010", name: "Rob Roy Pub", category: "nightlife",
@@ -210,6 +216,7 @@ export const BUSINESSES = [
     price_per_grace_minute_cents: 100, premium_revenue_split: 20,
     description: "Pub on George Street.",
     osm_ref: "node/3592211118",
+    featured: true,
   },
   {
     id: "sj-019", name: "Chinched", category: "restaurant",
@@ -232,6 +239,7 @@ export const BUSINESSES = [
     price_per_grace_minute_cents: 50, premium_revenue_split: 30,
     description: "Pub \u00b7 american on Water Street.",
     osm_ref: "node/1948983643",
+    featured: true,
   },
   {
     id: "sj-021", name: "The Sprout Restaurant", category: "restaurant",
@@ -320,6 +328,7 @@ export const BUSINESSES = [
     price_per_grace_minute_cents: 75, premium_revenue_split: 25,
     description: "Barbershop on Ropewalk Lane.",
     osm_ref: "node/11350180391",
+    featured: true,
   },
   {
     id: "sj-029", name: "Arizona Heat", category: "salon",
